@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="chartist.min.css">
+    <link rel="stylesheet" href="w3.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <script src="chartist.min.js"></script>
+  </head>
+  <body>
+  <!-- Menu Bar block -->
+  <div class="w3-bar w3-black w3-border">
+  <a href="#" class="w3-bar-item w3-button" id="butt-home" onclick="menuClick(this)"><i class="fa fa-home"></i></a>
+  <a href="#" class="w3-bar-item w3-button" id="butt-chart" onclick="menuClick(this)"><i class="fa fa-bar-chart"></i></i></a>
+  <a href="#" class="w3-bar-item w3-button" id="butt-conf" onclick="menuClick(this)"><i class="fa fa-cogs"></i></a>
+  </div>
+  <!-- Home Page block -->
+  <div class="page" id="homep" style="display:none">
+    This is Homepage
+  </div>
+  <!-- Charts Page block -->
+  </body>
+  <div class="page" id="chartp" style="display:none">
+    <div class="w3-row w3-margin w3-border">
+    <div class="w3-col w3-green w3-container" style="width:20%"><p>20%</p></div>
+    <div class="w3-col w3-blue w3-container" style="width:60%"><p>60%</p></div>
+    <div class="w3-col w3-red w3-container" style="width:20%"><p>20%</p></div>
+    </div>
+    <div class="w3-row w3-margin w3-border">
+      <div class="w3-third w3-border ct-chart" id="line"></div>
+      <div class="w3-third w3-border ct-chart" id="bar"></div>
+      <div class="w3-third w3-border ct-chart" id="pie"></div>
+    </div>
+  </div>
+
+  <!-- Settings Page block -->
+  <div class=" page" id="confp" style="display:none">
+    This is Configuration Page
+  </div>
+  </body>
+
+  <script>
+  var data_interval;
+  //Menu bar management
+  var element = document.getElementById("butt-home");
+  element.classList.add("w3-green");
+  var page_id="butt-home";
+  document.getElementById("homep").style.display = "block";
+  function menuClick(elmnt) {
+    var elements = document.getElementsByClassName('w3-bar-item');
+    [].forEach.call(elements, a => {
+      if(a==elmnt)
+        a.classList.add("w3-green");
+      else
+        a.classList.remove("w3-green");
+    });
+    page_id = elmnt.id;
+    var elements = document.getElementsByClassName('page');
+    [].forEach.call(elements, a => {a.style.display = "none";});
+    clearInterval(data_interval);
+    switch(page_id) {
+      case "butt-home":
+        document.getElementById("homep").style.display = "block";
+        break;
+      case "butt-chart":
+        document.getElementById("chartp").style.display = "block";
+        linechart.update();
+        barchart.update();
+        piechart.update();
+        data_interval = setInterval(function() {GetData(); }, 5000);
+        break;
+      case "butt-conf":
+        document.getElementById("confp").style.display = "block";
+        break;
+      default:
+    }
+  }
+
+  function GetData() {
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function() {
+      if (this.readyState == 4 && this.status == 200) {
+        var randomArray = Array(40).fill().map(() => Math.round(Math.random() * 100));
+        var SinusArray = Array(40).fill().map((e,i)=>Math.round(Math.sin(i*2*Math.PI/20) * 30 +50));
+        var data = {series: [JSON.parse(this.responseText).data]};
+        //var data = {series: [randomArray,SinusArray]};
+        linechart.update(data);
+      }
+    };
+    xhttp.open("GET", "/getData", true);
+    xhttp.send();
+  }
+
+var data = {
+  series: [
+    [5, 2, 4, 2, 0],
+    [0, 1, 2, 3, 4]
+  ]
+};
+var options = {
+  showPoint: false,
+  axisX: {
+    showGrid: false
+    //scaleMinSpace: 50
+  },
+  axisY: {
+    low: 0,
+    high: 100,
+    type: Chartist.FixedScaleAxis,
+    //ticks: [0, 50, 75, 87.5, 100],
+    divisor: 10,
+  },
+//size options
+  //fullWidth: true,
+  //width: 300,
+  height: 300,
+  //
+  showArea: true
+};
+var linechart = new Chartist.Line('#line', data, options);
+
+
+var data = {
+  labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+  series: [
+    [5, 2, 4, 2, 1]
+  ]
+};
+// In the global name space Chartist we call the Bar function to initialize a bar chart. As a first parameter we pass in a selector where we would like to get our chart created and as a second parameter we pass our data object.
+var barchart = new Chartist.Bar('#bar', data, options);
+var piechart = new Chartist.Pie('#pie', {labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],series: [1, 3, 4, 8, 6, 9, 1] },{height: 300});
+
+</script>
+</html>
