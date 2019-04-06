@@ -4,27 +4,27 @@
     <link rel="stylesheet" href="chartist.min.css">
     <link rel="stylesheet" href="w3.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+	<link rel="icon" href="data:;base64,iVBORw0KGgo=">
     <script src="chartist.min.js"></script>
   </head>
   <body>
   <!-- Menu Bar block -->
   <div class="w3-bar w3-black w3-border">
-  <a href="#" class="w3-bar-item w3-button" id="butt-home" onclick="menuClick(this)"><i class="fa fa-home"></i></a>
-  <a href="#" class="w3-bar-item w3-button" id="butt-chart" onclick="menuClick(this)"><i class="fa fa-bar-chart"></i></i></a>
-  <a href="#" class="w3-bar-item w3-button" id="butt-conf" onclick="menuClick(this)"><i class="fa fa-cogs"></i></a>
+  <a href="#" class="w3-bar-item w3-button w3-xlarge" id="butt-home" onclick="menuClick(this)"><i class="fa fa-home"></i></a>
+  <a href="#" class="w3-bar-item w3-button w3-xlarge" id="butt-chart" onclick="menuClick(this)"><i class="fa fa-bar-chart"></i></i></a>
+  <a href="#" class="w3-bar-item w3-button w3-xlarge" id="butt-conf" onclick="menuClick(this)"><i class="fa fa-cogs"></i></a>
+  <a href="#" class="w3-bar-item w3-button w3-xlarge" id="butt-help" onclick="menuClick(this)"><i class="fa fa-info-circle"></i></a>
   </div>
   <!-- Home Page block -->
   <div class="page" id="homep" style="display:none">
-    This is Homepage
+    <div class="w3-row w3-margin w3-border" id="progress-bars">
+      <!-- Bars added from JS -->
+    </div>
   </div>
+
   <!-- Charts Page block -->
   </body>
   <div class="page" id="chartp" style="display:none">
-    <div class="w3-row w3-margin w3-border">
-    <div class="w3-col w3-green w3-container" style="width:20%"><p>20%</p></div>
-    <div class="w3-col w3-blue w3-container" style="width:60%"><p>60%</p></div>
-    <div class="w3-col w3-red w3-container" style="width:20%"><p>20%</p></div>
-    </div>
     <div class="w3-row w3-margin w3-border">
       <div class="w3-third w3-border ct-chart" id="line"></div>
       <div class="w3-third w3-border ct-chart" id="bar"></div>
@@ -33,101 +33,220 @@
   </div>
 
   <!-- Settings Page block -->
-  <div class=" page" id="confp" style="display:none">
-    This is Configuration Page
+  <div class="page" id="confp" style="display:none">
+    <div class="w3-card w3-margin w3-light-grey">
+      <div class="w3-container w3-green">
+          <h2>System Settings</h2>
+      </div>
+      <div class="w3-container">
+        <div id="system-settings"></div>
+        <input class="w3-radio" type="radio" name="gender" value="winter" checked>
+        <label>Winter</label>
+        <input class="w3-radio" type="radio" name="gender" value="summer">
+        <label>Spring</label>
+        <p><button onclick="onSave()" class="w3-button w3-black">Save</button></p>
+      </div>
+      <div class="w3-container w3-green">
+        <h2>WIFI Settings</h2>
+      </div>
+      <div class="w3-container">
+        <div id="wifi-settings"></div>
+        <label>SSID</label>
+        <input class="w3-input" type="text">
+        <label>Password</label>
+        <input class="w3-input" type="password">
+        <p><button onclick="onSave()" class="w3-button w3-black">Save</button></p>
+      </div>
+    </div>
+    <div class="w3-margin"><button onclick="onLoad()" class="w3-button w3-block w3-black">Reload</button></div>
+
+
+    
   </div>
+  <!-- Help Page block -->
+  <div class="page" id="helpp" style="display:none">
+    This is Help Page
+  </div>
+  <!-- Templates block -->
+  <template id="progress-bar">
+    <div class="w3-row">
+      <div class="w3-col w3-container" id="label" style="width:15%">Template Text</div>
+      <div class="w3-rest w3-light-grey">
+        <div class="w3-center" id="value" style="width:50%">50%</div>
+      </div>
+    </div>
+  </template>
+
+  <template id="input-item">
+    <div class="w3-row">
+      <div class="w3-col w3-container" style="width:15%"><p id="name">Name</p></div> 
+      <div class="w3-col" style="width:30%"><input class="w3-input" id="value" type="text"></div>
+      <div class="w3-col w3-container" style="width:5%"><p id="unit">Unit</p></div>
+    </div>
+  </template>
+
   </body>
-
   <script>
-  var data_interval;
-  //Menu bar management
-  var element = document.getElementById("butt-home");
-  element.classList.add("w3-green");
-  var page_id="butt-home";
-  document.getElementById("homep").style.display = "block";
-  function menuClick(elmnt) {
-    var elements = document.getElementsByClassName('w3-bar-item');
-    [].forEach.call(elements, a => {
-      if(a==elmnt)
-        a.classList.add("w3-green");
-      else
-        a.classList.remove("w3-green");
-    });
-    page_id = elmnt.id;
-    var elements = document.getElementsByClassName('page');
-    [].forEach.call(elements, a => {a.style.display = "none";});
-    clearInterval(data_interval);
-    switch(page_id) {
-      case "butt-home":
-        document.getElementById("homep").style.display = "block";
-        break;
-      case "butt-chart":
-        document.getElementById("chartp").style.display = "block";
-        linechart.update();
-        barchart.update();
-        piechart.update();
-        data_interval = setInterval(function() {GetData(); }, 5000);
-        break;
-      case "butt-conf":
-        document.getElementById("confp").style.display = "block";
-        break;
-      default:
-    }
+//--------------- Menu bar management
+var data_interval;
+var history_interval;
+var element = document.getElementById("butt-home");
+element.classList.add("w3-green");
+var page_id="butt-home";
+document.getElementById("homep").style.display = "block";
+function menuClick(elmnt) {
+  var elements = document.getElementsByClassName('w3-bar-item');
+  [].forEach.call(elements, a => {
+    if(a==elmnt)
+  	a.classList.add("w3-green");
+    else
+  	a.classList.remove("w3-green");
+  });
+  page_id = elmnt.id;
+  var elements = document.getElementsByClassName('page');
+  [].forEach.call(elements, a => {a.style.display = "none";});
+  clearInterval(data_interval);
+  clearInterval(history_interval);
+  switch(page_id) {
+    case "butt-home":
+  	document.getElementById("homep").style.display = "block";
+    GetData();
+    data_interval = setInterval(function() {GetData(); }, 15000);
+  	break;
+    case "butt-chart":
+  	document.getElementById("chartp").style.display = "block";
+  	linechart.update();
+  	barchart.update();
+  	piechart.update();
+    GetHistory();
+  	break;
+    case "butt-conf":
+    document.getElementById("confp").style.display = "block";
+    break;
+    case "butt-help":
+    document.getElementById("helpp").style.display = "block";
+    break;
+    default:
   }
+}
 
-  function GetData() {
-    var xhttp = new XMLHttpRequest();
-    xhttp.onreadystatechange = function() {
-      if (this.readyState == 4 && this.status == 200) {
-        var randomArray = Array(40).fill().map(() => Math.round(Math.random() * 100));
-        var SinusArray = Array(40).fill().map((e,i)=>Math.round(Math.sin(i*2*Math.PI/20) * 30 +50));
-        var data = {series: [JSON.parse(this.responseText).data]};
-        //var data = {series: [randomArray,SinusArray]};
-        linechart.update(data);
-      }
-    };
-    xhttp.open("GET", "/getData", true);
-    xhttp.send();
+
+//--------------- Config events from button (configuration)
+function onSave() {
+  console.log("Save !")
+}
+function onLoad() {
+  console.log("Load !")
+}
+
+//--------------- Events for data
+function GetData() {
+  console.log("GetData !");
+}
+
+/*function GetHistory() {
+  console.log("GetHistory !");
+  var randomArray = Array(40).fill().map(() => Math.round(Math.random() * 100));
+  var SinusArray = Array(40).fill().map((e,i)=>Math.round(Math.sin(i*2*Math.PI/20) * 30 +50));
+  var data = {series: [randomArray,SinusArray]};
+  linechart.update(data);
+}*/
+function GetHistory() {
+var xhttp = new XMLHttpRequest();
+xhttp.onreadystatechange = function() {
+  if (this.readyState == 4 && this.status == 200) {
+  var data = {series: [JSON.parse(this.responseText).data]};
+  linechart.update(data);
   }
-
-var data = {
-  series: [
-    [5, 2, 4, 2, 0],
-    [0, 1, 2, 3, 4]
-  ]
 };
+xhttp.open("GET", "/getData", true);
+xhttp.send();
+}
+
 var options = {
   showPoint: false,
   axisX: {
     showGrid: false
     //scaleMinSpace: 50
   },
-  axisY: {
-    low: 0,
-    high: 100,
+  /*axisY: {
+    low: 100,
+    high: 50,
     type: Chartist.FixedScaleAxis,
-    //ticks: [0, 50, 75, 87.5, 100],
-    divisor: 10,
-  },
+  },*/
 //size options
-  //fullWidth: true,
-  //width: 300,
   height: 300,
-  //
   showArea: true
 };
-var linechart = new Chartist.Line('#line', data, options);
-
-
 var data = {
   labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
   series: [
     [5, 2, 4, 2, 1]
   ]
 };
-// In the global name space Chartist we call the Bar function to initialize a bar chart. As a first parameter we pass in a selector where we would like to get our chart created and as a second parameter we pass our data object.
+
+var linechart = new Chartist.Line('#line', undefined, options);
 var barchart = new Chartist.Bar('#bar', data, options);
 var piechart = new Chartist.Pie('#pie', {labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],series: [1, 3, 4, 8, 6, 9, 1] },{height: 300});
+
+document.getElementById('butt-home').click();
+
+set_progress_bar("progress-bars","Ratio 1",30);
+set_progress_bar("progress-bars","Ratio 2",60);
+
+add_input_item("system-settings","Input Name",56,"&degC");
+//add_input_item("system-settings","Input Variable",1,"unit");
+//add_input_item("wifi-settings","Test Variable",1,"unit");
+
+
+function set_progress_bar(dest_id,name,value) {
+  var temp = document.querySelector('#progress-bar').content;
+  var clone = document.importNode(temp, true);
+  if(name){
+    var label = clone.querySelector('#label');
+    label.innerHTML = name;
+  } 
+  if(value) {
+    var val = clone.querySelector('#value');
+    val.innerHTML = value + '%';
+    val.style.width = value + '%';
+
+    var hsl_green = [120, 100, 30];
+    var hsl_red = [0, 100, 45];
+    val.style.backgroundColor = interpolateHSL(hsl_green,hsl_red,value/100);
+  }
+  document.getElementById(dest_id).appendChild(clone);   
+}
+
+function add_input_item(dest_id,name,value,unit) {
+  var temp = document.querySelector('#input-item').content;
+  var clone = document.importNode(temp, true);
+  if(name){
+    var obj_label = clone.querySelector('#name');
+    obj_label.innerHTML = name;
+  } 
+  if(value) {
+    var obj_value = clone.querySelector('#value');
+    obj_value.value = value;
+    obj_value.id = name.replace(/\s+/g, '').toLowerCase()+'_value';
+  }
+  if(unit) {
+    var obj_unit = clone.querySelector('#unit');
+    obj_unit.innerHTML = unit;
+  }
+  document.getElementById(dest_id).appendChild(clone);
+}
+
+//https://codepen.io/njmcode/pen/axoyD/
+function interpolateHSL(color1, color2, factor) {
+  if (arguments.length < 3) { factor = 0.5; }
+  var hsl1 = color1;
+  var hsl2 = color2;
+  for (var i=0;i<3;i++) {
+    hsl1[i] += factor*(hsl2[i]-hsl1[i]);
+  }
+  return 'hsl('+hsl1[0]+','+hsl1[1]+'%,'+hsl1[2]+'%)';
+};
 
 </script>
 </html>

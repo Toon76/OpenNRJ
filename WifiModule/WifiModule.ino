@@ -5,15 +5,18 @@
 #include <TaskScheduler.h>
 #include <CircularBuffer.h>
 
+#define SAMPLING_T      15  //in seconds
+#define DAY_HISTORY_T   600//600 //in seconds
+
 //buffer
-CircularBuffer<float, 360> buffer; //sampling period 10s (360*10s = 1H) 
-CircularBuffer<float, 288> bufferday; //sampling period 5min (288*5m = 1day) 
-CircularBuffer<float, 168> bufferweek; //sampling period 1h (168*1h = 1week) 
+CircularBuffer<int16_t, (3600/SAMPLING_T)> buffer; //sampling period 15s (240*15s = 1H) 
+CircularBuffer<int16_t, (86400/DAY_HISTORY_T)> bufferday; //sampling period 10min (144*10m = 1day) 
 
 //Tasks
-void ADCCallback();
-void printCallback();
-Task task1(10000, TASK_FOREVER, &ADCCallback);
+void SamplingCallback();
+void HistoryCallback();
+Task SamplingTask(SAMPLING_T*1000, TASK_FOREVER, &SamplingCallback);
+Task HistoryTask(DAY_HISTORY_T*1000, TASK_FOREVER, &HistoryCallback);
 Scheduler runner;
 
 //PT1000 sensor charts
@@ -27,7 +30,7 @@ const char* password = "menerval";
 
 unsigned long prevTime;
 /////////////////////////
-void ADCCallback() {
+void SamplingCallback() {
   static int value = 0;
     int16_t adc0 = ads.readADC_SingleEnded(0);//random(0, 100);
     float R = 10000 * ((float)adc0*2 / (3260-(float)adc0*2));
@@ -38,9 +41,11 @@ void ADCCallback() {
     T = (1.0 / (c1 + c2*logR + c3*logR*logR*logR));
     T = T - 273.15;
     Serial.print("Temperature: "); Serial.print(T);Serial.println(" C");
-    buffer.push(T);          
+    buffer.push((int16_t)((T+0.05)*10));  //save value as integer in tenth and round it        
 }
-
+void HistoryCallback() {
+  bufferday.push(buffer[buffer.size()-1]);
+}
 //////////////////////////////
 ////////////SETUP/////////////
 //////////////////////////////
@@ -52,8 +57,10 @@ void setup()
   
   //Scheduler initialization
   runner.init();
-  runner.addTask(task1);
-  task1.enable();
+  runner.addTask(SamplingTask);
+  runner.addTask(HistoryTask);
+  SamplingTask.enable();
+  HistoryTask.enable();
 
  //External ADC initialization
   ads.setGain(GAIN_ONE);        // 1x gain   +/- 4.096V  1 bit = 2mV
@@ -85,9 +92,7 @@ void setup()
   Serial.println(WiFi.localIP());
   
   digitalWrite(2, HIGH);
-
 }
-
 
 //////////////////////////////
 ////////////LOOP//////////////
@@ -109,79 +114,77 @@ void loop()
         //Serial.println(line);
         if(line.indexOf("GET /") != -1) req = line;
       }*/
+    //client.setTimeout(5000); // default is 1000
+    // Read the first line of the request
+    String req = client.readStringUntil('\r');
+    while (client.available()) {
+      client.readStringUntil('\n');
+    }
+    //manage request
+    if(req.indexOf("GET /") != -1) {
+      //Serial.println(req);
+      String path = req.substring(req.indexOf("/"),req.indexOf(" HTTP/1.1"));
+      if(path.endsWith("/")) path += "index.html";
       
-      //client.setTimeout(5000); // default is 1000
-      // Read the first line of the request
-      String req = client.readStringUntil('\r');
-      while (client.available()) {
-        client.readStringUntil('\n');
-      }
-      
-      //delay(10);
-      //manage request
-      if(req.indexOf("GET /") != -1) {
-        Serial.println(req);
-        String path = req.substring(req.indexOf("/"),req.indexOf(" HTTP/1.1"));
-        if(path.endsWith("/")) path += "index.html";
-        
-        if(path.indexOf(".") == -1) //not a file
-        {
-          if (path == "/getADC"){
-            Serial.println("serving ADC");
-            int a = random(0, 100);
-            String adc = String(a);
-            Serial.println(adc);
-            client.print(F("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\n"));
-            client.println(adc);
-          }
-          else if(path == "/getData"){
-            Serial.println("serving data");
-            using index_t = decltype(buffer)::index_t;
-            client.print(F("HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n"));
-            client.print("{\"data\":[");
-            using index_t = decltype(buffer)::index_t;
-            for (index_t i = 0; i < buffer.size(); i++) {
-              client.print(buffer[i]);
-              if(i < (buffer.size()-1))
-                client.print(",");
-            }
-            /*while (!buffer.isEmpty()) {
-              client.print(buffer.pop());
-              if(!buffer.isEmpty())
-                client.print(",");
-            }*/
-            client.println("]}");
-          }
+      if(path.indexOf(".") == -1) //not a file
+      {
+        if (path == "/getRT"){
+          int a = random(0, 100);
+          String adc = String(a);
+          client.print(F("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\n"));
+          client.println(adc);
         }
-        else
-        {
-          //select dataType
-          String dataType = "text/plain";
-          if(path.endsWith(".html")) dataType = "text/html";
-          else if(path.endsWith(".htm")) dataType = "text/html";
-          else if(path.endsWith(".css")) dataType = "text/css";
-          else if(path.endsWith(".js")) dataType = "application/javascript";
-          else if(path.endsWith(".jpg")) dataType = "image/jpeg";
-          //send file
-          webFile = SPIFFS.open(path, "r");
-          if (webFile) {
-            Serial.println("Serve file :"+path);
-            client.println("HTTP/1.1 200 OK");
-            //client.print("Content-Type: ");client.println(dataType);
-            client.println("Connnection: close\r\n");
-            prevTime=millis();
-            client.write(webFile);
-            webFile.close();
-            Serial.print("time to serve: ");Serial.println((millis()-prevTime)/1000);
+        else if(path == "/getData"){
+          //Serial.println("serving data");
+          client.print(F("HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n"));
+          client.print("{\"period\":");client.print(SAMPLING_T);client.print(",\"data\":[");
+          using index_t = decltype(buffer)::index_t;
+          for (index_t i = 0; i < buffer.size(); i++) {
+            client.print((float)buffer[i] /10);
+            if(i < (buffer.size()-1))
+              client.print(",");
           }
+          client.println("]}");
+        }
+        else if(path == "/getHistory"){
+          client.print(F("HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n"));
+          client.print("{\"period\":");client.print(SAMPLING_T);client.print(",\"data\":[");
+          for (int i = 0; i < bufferday.size(); i++) {
+            client.print((float)bufferday[i] /10);
+            if(i < (bufferday.size()-1))
+              client.print(",");
+          }
+          client.println("]}");
         }
       }
       else
       {
-        Serial.println("####request error");Serial.println(req);
+        //select dataType
+        String dataType = "text/plain";
+        if(path.endsWith(".html")) dataType = "text/html";
+        else if(path.endsWith(".htm")) dataType = "text/html";
+        else if(path.endsWith(".css")) dataType = "text/css";
+        else if(path.endsWith(".js")) dataType = "application/javascript";
+        else if(path.endsWith(".jpg")) dataType = "image/jpeg";
+        //send file
+        webFile = SPIFFS.open(path, "r");
+        if (webFile) {
+          Serial.println("Serve file :"+path);
+          client.println("HTTP/1.1 200 OK");
+          //client.print("Content-Type: ");client.println(dataType);
+          client.println("Connnection: close\r\n");
+          prevTime=millis();
+          client.write(webFile);
+          webFile.close();
+          Serial.print("time to serve: ");Serial.println((millis()-prevTime)/1000);
+        }
       }
-      delay(1);
-      client.stop(); // close the connection
-   // } // end while (client.connected())
+    }
+    else
+    {
+      Serial.println("####request error");Serial.println(req);
+    }
+    delay(1);
+    client.stop(); // close the connection
   } // end if (client)
 }
