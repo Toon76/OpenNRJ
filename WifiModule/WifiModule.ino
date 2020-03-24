@@ -8,21 +8,21 @@
  
 WiFiServer server(80);
 File webFile;
-const char* ssid = "TOON_WIFI";
+const char* ssid = "HUAWEI";
 const char* password = "menerval";
 
-SenseData sense_obj;
+SenseData sense_data;
 //////////////////////////////
 ////////////SETUP/////////////
 //////////////////////////////
 void setup()
 {  
-  pinMode(2, OUTPUT);
-  digitalWrite(2, LOW);
+  pinMode(D4, OUTPUT);
+  digitalWrite(D4, LOW);
   Serial.begin(115200);
 
 
-  sense_obj.init();
+  sense_data.init();
 
   //SPIFFS initialization
   bool result = SPIFFS.begin();
@@ -48,8 +48,7 @@ void setup()
   server.begin();
   Serial.print("\n\rat IP:");
   Serial.println(WiFi.localIP());
-
-  digitalWrite(2, HIGH);
+  digitalWrite(D4, HIGH);
 }
 
 
@@ -59,13 +58,13 @@ void setup()
 void loop()
 {
   //scheduler.execute();
-  sense_obj.run();
+  sense_data.run();
   WiFiClient client = server.available();  // try to get client
   
-  digitalWrite(2, HIGH);
+  //digitalWrite(D4, HIGH);
   if (client) {
     
-    digitalWrite(2, LOW);
+    //digitalWrite(D4, LOW);
     //client.setTimeout(5000); // default is 1000
     // Read the first line of the request
     String req = client.readStringUntil('\r');
@@ -82,20 +81,36 @@ void loop()
       
       if(path.indexOf(".") == -1) //not a file
       {
+        char buf_value[32];
+        int long_history = 0;
+        int history_qty = 0;
+        int value = 0;
         //get request parameters
-        int long_history;
-        int history_qty;
         char param_name[32];
-        WEB_parse(path, &long_history, &history_qty, param_name);
+        WEB_parse(path,"name",param_name);
+        WEB_parse(path,"mode",buf_value);
+        if(strcmp(buf_value, "1") == 0)
+          long_history = 1;
+        WEB_parse(path,"qty",buf_value);
+        String str(buf_value);
+        history_qty = str.toInt(); 
+        WEB_parse(path,"value",buf_value);
+        str = buf_value;
+        value = str.toInt(); 
+        //WEB_parse(path, &long_history, &history_qty, param_name);
 
         //execute request
         if(path.indexOf("/getData") != -1){
           client.print(F("HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n"));
-          client.println(sense_obj.getData(param_name));
+          client.println(sense_data.getData(param_name));
         }
         else if(path.indexOf("/getHistory") != -1){
           client.print(F("HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n"));
-          client.println(sense_obj.getHistory(param_name,history_qty,long_history));
+          client.println(sense_data.getHistory(param_name,history_qty,long_history));
+        }
+        else if(path.indexOf("/setData") != -1){
+          client.print(F("HTTP/1.1 200 OK\r\n"));
+          sense_data.setData(param_name,value);
         }
       }
       else

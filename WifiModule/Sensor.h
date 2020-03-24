@@ -12,20 +12,42 @@ typedef enum
 {
   UNDEFINED_I = 0,
   ESP8266_ADC,
-	ADS1015_ADC0,
+  //ADS using Wire/I2C (pin D1,D2)
+  ADS1015_ADC0,
 	ADS1015_ADC1,
 	ADS1015_ADC2,
-	ADS1015_ADC3,
+  ADS1015_ADC3,
+
+  //sync GPIO with arr_gpiodef
+  ESP8266_D0, //GPIO16 (warning:high at boot)
+  ESP8266_D3, //GPIO0 (warning: used at boot)
+  ESP8266_D4, //GPIO2, ESP8266 LED (warning: used at boot)
+  ESP8266_D5, //GPIO14
+  ESP8266_D6, //GPIO12
+  ESP8266_D7, //GPIO13
+  ESP8266_D8 //GPIO15 (warning: used at boot)
+  //RX //GPIO3
+  //TX //GPIO1
+  //SPI CLK  //GPIO6
+  //SPI MISO //GPIO7
+  //SPI CS   //GPIO11
+  //SPI MOSI //GPIO8
+  //GPIO9
+  //GPIO10
 }SensorInput_t;
 
 typedef enum
 {
   UNDEFINED_T = 0,
 	ANALOG_mV,
-	PT1000, //Not used need amplifier
-	NTC,
-	DIGITAL
+  TEMP_NTC,
+  TEMP_DS18B20,
+  DIGITAL_IN,
+  DIGITAL_OUT,
+  PWM
 }SensorType_t;
+
+
 
 class Sensor
 {
@@ -34,6 +56,7 @@ class Sensor
 	//int m_history_sampling_rate;	//sec = x*SAMPLING_T
 	SensorInput_t m_input;
 	SensorType_t m_type;
+  int16_t m_value;
 	//float params[3]; //SensorType_t dependant (to be done)
  public:
   char m_name[32];
@@ -44,6 +67,7 @@ class Sensor
   void init(char* name, SensorInput_t input, SensorType_t type);
   void update(void);
   int16_t getValue(void);
+  void setValue(int16_t val);
  private:
 }; 
 

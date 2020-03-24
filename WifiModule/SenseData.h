@@ -20,6 +20,7 @@ class SenseData
   //void getData(Sensor sensor);
   String getHistory(char* name,int qty,int long_history);
   //void getHistory(Sensor sensor,int qty);
+  void setData(char* name, int value);
  private:
 };
 
