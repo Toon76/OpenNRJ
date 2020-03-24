@@ -75,28 +75,28 @@
   <!-- Templates blocks -->
   <template id="progress-bar">
     <div class="w3-row">
-      <div class="w3-col w3-container" id="label" style="width:15%">Template Text</div>
+      <div class="w3-col w3-container bar_label" style="width:15%">Template Text</div>
       <div class="w3-rest w3-light-grey">
-        <div class="w3-center" id="value" style="width:50%">50%</div>
+        <div class="w3-center bar_value" style="width:50%">50%</div>
       </div>
     </div>
   </template>
 
   <template id="input-item">
     <div class="w3-row">
-      <div class="w3-col w3-container" style="width:15%"><p id="name">Name</p></div> 
-      <div class="w3-col" style="width:30%"><input class="w3-input" id="value" type="text"></div>
-      <div class="w3-col w3-container" style="width:5%"><p id="unit">Unit</p></div>
+      <div class="w3-col w3-container item_label" style="width:15%"><p>Name</p></div> 
+      <div class="w3-col" style="width:30%"><input class="w3-input item_value" type="text"></div>
+      <div class="w3-col w3-container item_unit" style="width:5%"><p>Unit</p></div>
     </div>
   </template>
 
   <template id="input-switch">
         <!-- Rounded switch -->
         <div class="w3-row">
-          <div class="w3-col w3-container" id="label" style="width:15%">TemplateSwitch</div>
+          <div class="w3-col w3-container sw_label" style="width:15%">TemplateSwitch</div>
           <div class="w3-rest">
             <label class="switch" onchange="onToggle()">
-              <input type="checkbox" name="TemplateSwitch" class="myCheck">
+              <input type="checkbox" name="TemplateSwitch" class="sw_chkbx">
               <span class="slider round"></span>
              </label>
           </div>
@@ -272,40 +272,40 @@ document.getElementById('butt-home').click();
 
 set_progress_bar("progress-bars","Ratio 1",30);
 set_progress_bar("progress-bars","Ratio 2",60);
-set_switch("switches","LED",0);
+set_switch("switches","LED",1);
 
 add_input_item("system-settings","Input Name",56,"&degC");
 //add_input_item("system-settings","Input Variable",1,"unit");
 //add_input_item("wifi-settings","Test Variable",1,"unit");
 
 function set_switch(dest_id,name,value) {
+  //document.querySelector(".monsters"); select class
+  //var el = document.querySelector("div.panneau-utilisateur.principal input[name='identifiant']");
   var temp = document.querySelector('#input-switch').content;
   var clone = document.importNode(temp, true);
+
   if(name){
-    var label = clone.querySelector('#label');
-    label.innerHTML = name;
+    clone.querySelector('.sw_label').innerHTML = name;
   } 
   if(value) {
+    clone.querySelector('.sw_chkbx').checked = true;
   }
-  document.getElementById(dest_id).appendChild(clone);   
-  console.log( document.getElementById(dest_id));
+  document.getElementById(dest_id).appendChild(clone);  
 }
 
 function set_progress_bar(dest_id,name,value) {
   var temp = document.querySelector('#progress-bar').content;
   var clone = document.importNode(temp, true);
   if(name){
-    var label = clone.querySelector('#label');
-    label.innerHTML = name;
+    clone.querySelector('.bar_label').innerHTML = name;
   } 
   if(value) {
-    var val = clone.querySelector('#value');
-    val.innerHTML = value + '%';
-    val.style.width = value + '%';
+    clone.querySelector('.bar_value').innerHTML = value + '%';
+    clone.querySelector('.bar_value').style.width = value + '%';
 
     var hsl_green = [120, 100, 30];
     var hsl_red = [0, 100, 45];
-    val.style.backgroundColor = interpolateHSL(hsl_green,hsl_red,value/100);
+    clone.querySelector('.bar_value').style.backgroundColor = interpolateHSL(hsl_green,hsl_red,value/100);
   }
   document.getElementById(dest_id).appendChild(clone);   
 }
@@ -314,17 +314,14 @@ function add_input_item(dest_id,name,value,unit) {
   var temp = document.querySelector('#input-item').content;
   var clone = document.importNode(temp, true);
   if(name){
-    var obj_label = clone.querySelector('#name');
-    obj_label.innerHTML = name;
+    clone.querySelector('.item_label').innerHTML = name;
   } 
   if(value) {
-    var obj_value = clone.querySelector('#value');
-    obj_value.value = value;
-    obj_value.id = name.replace(/\s+/g, '').toLowerCase()+'_value';
+    clone.querySelector('.item_value').value = value;
+    clone.querySelector('.item_value').id = name.replace(/\s+/g, '').toLowerCase()+'_value';
   }
   if(unit) {
-    var obj_unit = clone.querySelector('#unit');
-    obj_unit.innerHTML = unit;
+    clone.querySelector('.item_unit').innerHTML = unit;
   }
   document.getElementById(dest_id).appendChild(clone);
 }
