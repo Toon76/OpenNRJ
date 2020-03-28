@@ -23,7 +23,7 @@
       <!-- Bars added from JS -->
     </div>
     <div class="w3-row w3-margin w3-border" id="switches">
-      <!-- Bars added from JS -->
+      <!-- Switches added from JS -->
     </div>
   </div>
 
@@ -45,10 +45,10 @@
       </div>
       <div class="w3-container">
         <div id="system-settings"></div>
-        <input class="w3-radio" type="radio" name="gender" value="winter" checked>
+        <!-- <input class="w3-radio" type="radio" name="gender" value="winter" checked>
         <label>Winter</label>
         <input class="w3-radio" type="radio" name="gender" value="summer">
-        <label>Spring</label>
+        <label>Spring</label> -->
         <p><button onclick="onSave()" class="w3-button w3-black">Save</button></p>
       </div>
       <div class="w3-container w3-green">
@@ -56,10 +56,12 @@
       </div>
       <div class="w3-container">
         <div id="wifi-settings"></div>
-        <label>SSID</label>
+        <!-- settings added from JS -->
+        <!-- <label>SSID</label>
         <input class="w3-input" type="text">
         <label>Password</label>
         <input class="w3-input" type="password">
+         -->
         <p><button onclick="onSave()" class="w3-button w3-black">Save</button></p>
       </div>
     </div>
@@ -91,14 +93,24 @@
   </template>
 
   <template id="input-switch">
-        <!-- Rounded switch -->
         <div class="w3-row">
           <div class="w3-col w3-container sw_label" style="width:15%">TemplateSwitch</div>
-          <div class="w3-rest">
+          <div class="w3-rest ">
             <label class="switch" onchange="onToggle()">
               <input type="checkbox" name="TemplateSwitch" class="sw_chkbx">
-              <span class="slider round"></span>
+              <span class="slider_sw"></span>
              </label>
+          </div>
+        </div>
+  </template>
+
+  <template id="input-slider">
+        <div class="w3-row">
+          <div class="w3-col w3-container slider_label" style="width:15%">TemplateSlider</div>
+          <div class="w3-col "style="width:15%">
+            <div class="slidecontainer" >
+              <input type="range" min="1" max="100" value="50" class="slider" name="TemplateSlider" onchange="onSlide()">
+            </div>
           </div>
         </div>
   </template>
@@ -106,6 +118,18 @@
   </body>
   <script>
 var linechart;
+var config_JSON;
+loadJSON();
+
+var piechart = new Chartist.Pie('#pie', {labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],series: [1, 3, 4, 8, 6, 9, 1] },{height: 300});
+
+document.getElementById('butt-home').click();
+
+set_progress_bar("progress-bars","Ratio 1",30);
+set_progress_bar("progress-bars","Ratio 2",60);
+set_switch("switches","LED",1);
+set_slider("switches","caca",25);
+
 //--------------- Menu bar management
 var data_interval;
 var history_interval;
@@ -113,6 +137,7 @@ var element = document.getElementById("butt-home");
 element.classList.add("w3-green");
 var page_id="butt-home";
 document.getElementById("homep").style.display = "block";
+
 function menuClick(elmnt) {
   var elements = document.getElementsByClassName('w3-bar-item');
   [].forEach.call(elements, a => {
@@ -182,9 +207,24 @@ function menuClick(elmnt) {
 //--------------- Config events from button (configuration)
 function onSave() {
   console.log("Save !")
+  var xobj = new XMLHttpRequest();
+    xobj.overrideMimeType("application/json");
+    xobj.open('POST', '/config', true);
+    xobj.onreadystatechange = function () {
+          if (xobj.readyState == 4 && xobj.status == "200") {
+            // Required use of an anonymous callback as .open will NOT return a value but simply returns undefined in asynchronous mode
+            console.log(xobj.responseText);
+          }
+    };
+    config_JSON.config.sampling_T = document.querySelector("#samplingperiod_value").value;
+    config_JSON.config.history_T = document.querySelector("#historyperiod_value").value;
+    config_JSON.config.WifiName = document.querySelector("#ssid_value").value;
+    config_JSON.config.WifiPWD = document.querySelector("#password_value").value;
+    xobj.send(JSON.stringify(config_JSON)); 
 }
 function onLoad() {
-  console.log("Load !")
+  console.log("Load !");
+  loadJSON();
 }
 
 //--------------- Events for data
@@ -196,6 +236,10 @@ function onToggle() {
   else
     xhttp.open("GET", "/setData&name="+event.target.name+"&value=0", true);
   xhttp.send();
+}
+
+function onSlide() {
+  console.log("onSlide " + event.target.name + event.target.value);
 }
 
 function GetData() {
@@ -225,59 +269,6 @@ function GetHistory(name,array) {
   xhttp.send();
 }
 
-var options = {
-  showPoint: false,
-  axisX: {
-    showGrid: false
-    //scaleMinSpace: 50
-  },
-  /*axisY: {
-    low: 100,
-    high: 50,
-    type: Chartist.FixedScaleAxis,
-  },*/
-//size options
-  height: 300,
-  showArea: true,
-  plugins: [
-    Chartist.plugins.legend({
-      legendNames: ["bla", "bli", "blo", "blu"],
-    })
-  ]
-};
-var data = {
-  labels: ["Un", "Deux", "Trois", "Quatre", "Cinq"],
-  series: [
-    [0],
-    [0],
-    [0]
-  ]
-};
-/*var linechart = new Chartist.Line('#line', 
-                                  {
-                                    labels: ['ADC0', 'ADC1', 'ADC2', 'ADC3'], series: Array(10).fill([])
-                                  }, 
-                                  {
-                                    height: 300,
-                                    plugins: [
-                                      Chartist.plugins.legend({
-                                        legendNames: ['ADC0', 'ADC1', 'ADC2', 'ADC3'],
-                                      })
-                                    ]
-                                  });*/
-//var barchart = new Chartist.Bar('#bar', data, options);
-var piechart = new Chartist.Pie('#pie', {labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],series: [1, 3, 4, 8, 6, 9, 1] },{height: 300});
-
-document.getElementById('butt-home').click();
-
-set_progress_bar("progress-bars","Ratio 1",30);
-set_progress_bar("progress-bars","Ratio 2",60);
-set_switch("switches","LED",1);
-
-add_input_item("system-settings","Input Name",56,"&degC");
-//add_input_item("system-settings","Input Variable",1,"unit");
-//add_input_item("wifi-settings","Test Variable",1,"unit");
-
 function set_switch(dest_id,name,value) {
   //document.querySelector(".monsters"); select class
   //var el = document.querySelector("div.panneau-utilisateur.principal input[name='identifiant']");
@@ -289,6 +280,22 @@ function set_switch(dest_id,name,value) {
   } 
   if(value) {
     clone.querySelector('.sw_chkbx').checked = true;
+  }
+  document.getElementById(dest_id).appendChild(clone);  
+}
+
+
+function set_slider(dest_id,name,value) {
+  //document.querySelector(".monsters"); select class
+  //var el = document.querySelector("div.panneau-utilisateur.principal input[name='identifiant']");
+  var temp = document.querySelector('#input-slider').content;
+  var clone = document.importNode(temp, true);
+
+  if(name){
+    clone.querySelector('.slider_label').innerHTML = name;
+  } 
+  if(value) {
+    clone.querySelector('.slider').value = value;
   }
   document.getElementById(dest_id).appendChild(clone);  
 }
@@ -312,18 +319,23 @@ function set_progress_bar(dest_id,name,value) {
 
 function add_input_item(dest_id,name,value,unit) {
   var temp = document.querySelector('#input-item').content;
-  var clone = document.importNode(temp, true);
-  if(name){
-    clone.querySelector('.item_label').innerHTML = name;
-  } 
-  if(value) {
-    clone.querySelector('.item_value').value = value;
-    clone.querySelector('.item_value').id = name.replace(/\s+/g, '').toLowerCase()+'_value';
+  if(document.querySelector('#'+name.replace(/\s+/g, '').toLowerCase()+'_value')) //item already exists
+    document.querySelector('#'+name.replace(/\s+/g, '').toLowerCase()+'_value').value = value;
+  else
+  {
+    var clone = document.importNode(temp, true);
+    if(name){
+      clone.querySelector('.item_label').innerHTML = name;
+    } 
+    if(value) {
+      clone.querySelector('.item_value').value = value;
+      clone.querySelector('.item_value').id = name.replace(/\s+/g, '').toLowerCase()+'_value';
+    }
+    if(unit) {
+      clone.querySelector('.item_unit').innerHTML = unit;
+    }
+    document.getElementById(dest_id).appendChild(clone);
   }
-  if(unit) {
-    clone.querySelector('.item_unit').innerHTML = unit;
-  }
-  document.getElementById(dest_id).appendChild(clone);
 }
 
 //https://codepen.io/njmcode/pen/axoyD/
@@ -337,5 +349,27 @@ function interpolateHSL(color1, color2, factor) {
   return 'hsl('+hsl1[0]+','+hsl1[1]+'%,'+hsl1[2]+'%)';
 };
 
+/* JSON config file handling
+ info: https://codepen.io/KryptoniteDove/post/load-json-file-locally-using-pure-javascript
+*/
+//function loadJSON(callback) {  
+function loadJSON() {   
+  var xobj = new XMLHttpRequest();
+  xobj.overrideMimeType("application/json");
+  xobj.open('GET', '/my_data.json', true);
+  xobj.onreadystatechange = function () {
+        if (xobj.readyState == 4 && xobj.status == "200") {
+          // Required use of an anonymous callback as .open will NOT return a value but simply returns undefined in asynchronous mode
+          //callback(xobj.responseText);
+          config_JSON = JSON.parse(xobj.responseText);
+          console.log(config_JSON);
+          add_input_item("system-settings","Sampling Period",config_JSON.config.sampling_T,"sec");
+          add_input_item("system-settings","History Period",config_JSON.config.history_T,"sec");
+          add_input_item("wifi-settings","SSID",config_JSON.config.WifiName," ");
+          add_input_item("wifi-settings","Password",config_JSON.config.WifiPWD," ");
+        }
+  };
+  xobj.send(null);  
+}
 </script>
 </html>

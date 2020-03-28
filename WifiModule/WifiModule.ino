@@ -4,10 +4,11 @@
 
 #include "web.h"
 #include "SenseData.h"
-
+#include <ArduinoJson.h>
  
 WiFiServer server(80);
 File webFile;
+File confFile;
 const char* ssid = "HUAWEI";
 const char* password = "menerval";
 
@@ -54,13 +55,44 @@ void setup()
 
 //////////////////////////////
 ////////////LOOP//////////////
-//////////////////////////////  
+////////////////////////////// 
+
+String payload; 
+bool got_config = false;
 void loop()
 {
   //scheduler.execute();
   sense_data.run();
   WiFiClient client = server.available();  // try to get client
   
+  if(got_config)
+  {
+    got_config = false;
+    // Allocate the JSON document and Deserialize the JSON document
+    //DynamicJsonDocument doc(2048);
+    StaticJsonDocument<1024> doc;
+    DeserializationError error = deserializeJson(doc, payload);
+    if (error) {
+      Serial.print(F("deserializeJson() failed: "));
+      Serial.println(error.c_str());
+      return;
+    }
+    else
+    {
+      //save file
+      confFile = SPIFFS.open("/my_data.json", "w+");
+      if (confFile) {
+        confFile.print(payload);
+        confFile.close();
+      }
+      else
+      {
+        Serial.println("##### error while saving configuration");
+      }
+      //const char* test = doc["config"]["WifiName"] ;
+    }
+  }
+
   //digitalWrite(D4, HIGH);
   if (client) {
     
@@ -69,7 +101,7 @@ void loop()
     // Read the first line of the request
     String req = client.readStringUntil('\r');
     while (client.available()) {
-      client.readStringUntil('\n');
+      payload = client.readStringUntil('\n');
     }
     //manage request
     if(req.indexOf("GET /") != -1) {
@@ -132,6 +164,14 @@ void loop()
           webFile.close();
         }
       }
+    }
+    else if(req.indexOf("POST /") != -1) {
+      String path = req.substring(req.indexOf("/"),req.indexOf(" HTTP/1.1"));
+      Serial.print("POST ");Serial.println(path);
+      Serial.println(payload);
+      client.print(F("HTTP/1.1 200 OK\r\n"));
+      client.println("Connnection: close\r\n");
+      got_config = true;
     }
     else
     {
