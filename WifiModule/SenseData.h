@@ -6,6 +6,7 @@
 #include "Sensor.h"
 
 #define MAX_SENSOR_NB	10
+#define PROCESS_T      1000  //in millisec
 
 class SenseData
 {

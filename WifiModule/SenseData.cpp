@@ -11,6 +11,14 @@ Scheduler sched;
 
 Sensor SensorArray[MAX_SENSOR_NB];
   
+void ProcessCallback() {
+  //can do some logic here
+  if(SensorArray[0].getValue() > 128)
+    SensorArray[7].setValue(1);
+  else
+    SensorArray[7].setValue(0);
+}
+
 void SamplingCallback() {
     for(int i = 0;i<MAX_SENSOR_NB;i++)
     {
@@ -46,23 +54,19 @@ void SenseData::init(void)
 
 	//Scheduler init
 	sched.init();
-	sched.addTask(SamplingTask);
-	sched.addTask(HistoryTask);
-	SamplingTask.enable();
-	HistoryTask.enable();
+
+  sched.addTask(SamplingTask);
+  sched.addTask(HistoryTask);
+  SamplingTask.enable();
+  HistoryTask.enable();
+
+  Task *ProcessTask = new Task(PROCESS_T, TASK_FOREVER, &ProcessCallback, &sched, true);
   Serial.println("Sense init");
 }
 
 void SenseData::run(void)
 {
 	sched.execute();
-/*  //can do some logic here
-  if(SensorArray[0].getValue() > 128)
-    SensorArray[7].setValue(1);
-  else
-    SensorArray[7].setValue(0);
-
-  */
 }
 
 //void addSensor(Sensor sensor);
@@ -75,7 +79,7 @@ String SenseData::getData(char* name)
     {
       if(strcmp(name,SensorArray[i].m_name) == 0 || strcmp("",name) == 0)
       {
-        ret += "\""+String(SensorArray[i].m_name)+"\":"+SensorArray[i].getValue()+",";
+        ret += "\""+String(SensorArray[i].m_name)+"\":"+SensorArray[i].readValue()+",";
       }
     }
   }
@@ -94,7 +98,7 @@ int16_t SenseData::getValue(char* name)
     {
       if(strcmp(name,SensorArray[i].m_name) == 0 || strcmp("",name) == 0)
       {
-        ret = SensorArray[i].getValue();
+        ret = SensorArray[i].readValue();
       }
     }
   }

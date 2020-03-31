@@ -49,10 +49,10 @@ void Sensor::init(char* name, SensorInput_t input, SensorType_t type)
 
 void Sensor::update(void)
 {
-  buffer.push(getValue());
+  buffer.push(readValue());
 }
 
-int16_t Sensor::getValue(void)
+int16_t Sensor::readValue(void)
 {
   float value = 0;
   switch(m_input){
@@ -108,6 +108,12 @@ int16_t Sensor::getValue(void)
    // https://nodemcu.readthedocs.io/en/master/modules/ds18b20/
     break;
   }
+  return m_value;
+}
+
+
+int16_t Sensor::getValue(void)
+{
   return m_value;
 }
 

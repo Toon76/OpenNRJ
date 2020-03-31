@@ -66,7 +66,8 @@ class Sensor
   Sensor(void);
   void init(char* name, SensorInput_t input, SensorType_t type);
   void update(void);
-  int16_t getValue(void);
+  int16_t readValue(void); //read the data physically
+  int16_t getValue(void); //read the buffered data
   void setValue(int16_t val);
  private:
 }; 
