@@ -17,10 +17,11 @@ class SenseData
   void run(void);
   //void addSensor(Sensor sensor);
   String getData(char* name);
+  int16_t getValue(char* name);
+  void setValue(char* name, int16_t val);
   //void getData(Sensor sensor);
   String getHistory(char* name,int qty,int long_history);
   //void getHistory(Sensor sensor,int qty);
-  void setData(char* name, int value);
  private:
 };
 

@@ -9,8 +9,13 @@
 WiFiServer server(80);
 File webFile;
 File confFile;
-const char* ssid = "HUAWEI";
-const char* password = "menerval";
+const char* configfile = "/my_data.json";
+
+
+String payload; 
+// Allocate the JSON document and Deserialize the JSON document
+//DynamicJsonDocument jsondoc(2048);
+StaticJsonDocument<1024> jsondoc;
 
 SenseData sense_data;
 //////////////////////////////
@@ -22,26 +27,36 @@ void setup()
   digitalWrite(D4, LOW);
   Serial.begin(115200);
 
+  //SPIFFS initialization
+  bool result = SPIFFS.begin();
+  Serial.println("SPIFFS opened: "+result);
+
+  confFile = SPIFFS.open(configfile, "r");
+  if (confFile) {
+    DeserializationError error = deserializeJson(jsondoc, confFile);
+    if (error)
+      Serial.println(F("Failed to read file, using default configuration"));
+    else
+    {
+      String WifiName = jsondoc["config"]["WifiName"];
+      /*Serial.print(F("Connect to : "));
+      Serial.println(WifiName);*/
+    }
+    confFile.close();
+  }
+  else
+  {
+    Serial.println("##### error while reading configuration");
+  }
 
   sense_data.init();
 
-  //SPIFFS initialization
-  bool result = SPIFFS.begin();
-  Serial.print("SPIFFS opened: ");
-  Serial.println(result);
-  /*String str = "";
-  Dir dir = SPIFFS.openDir("/");
-  while (dir.next()) {
-      str += dir.fileName();
-      str += " / ";
-      str += dir.fileSize();
-      str += "\r\n";
-  }
-  Serial.println(str);*/
-
   //Wifi initialization
-  Serial.print("Connect to "); Serial.println(ssid);
-  WiFi.begin(ssid, password);
+  String SSID = jsondoc["config"]["WifiName"];
+  String password = jsondoc["config"]["WifiPWD"];
+  /* -------------- to be removed !!!! ------------------*/ password = "menerval";
+  Serial.println("Connect to " + SSID);
+  WiFi.begin(SSID, password);
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
@@ -56,8 +71,6 @@ void setup()
 //////////////////////////////
 ////////////LOOP//////////////
 ////////////////////////////// 
-
-String payload; 
 bool got_config = false;
 void loop()
 {
@@ -68,10 +81,7 @@ void loop()
   if(got_config)
   {
     got_config = false;
-    // Allocate the JSON document and Deserialize the JSON document
-    //DynamicJsonDocument doc(2048);
-    StaticJsonDocument<1024> doc;
-    DeserializationError error = deserializeJson(doc, payload);
+    DeserializationError error = deserializeJson(jsondoc, payload);
     if (error) {
       Serial.print(F("deserializeJson() failed: "));
       Serial.println(error.c_str());
@@ -80,7 +90,7 @@ void loop()
     else
     {
       //save file
-      confFile = SPIFFS.open("/my_data.json", "w+");
+      confFile = SPIFFS.open(configfile, "w+");
       if (confFile) {
         confFile.print(payload);
         confFile.close();
@@ -89,7 +99,7 @@ void loop()
       {
         Serial.println("##### error while saving configuration");
       }
-      //const char* test = doc["config"]["WifiName"] ;
+      //const char* test = jsondoc["config"]["WifiName"] ;
     }
   }
 
@@ -142,7 +152,7 @@ void loop()
         }
         else if(path.indexOf("/setData") != -1){
           client.print(F("HTTP/1.1 200 OK\r\n"));
-          sense_data.setData(param_name,value);
+          sense_data.setValue(param_name,value);
         }
       }
       else

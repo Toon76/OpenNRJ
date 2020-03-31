@@ -56,6 +56,13 @@ void SenseData::init(void)
 void SenseData::run(void)
 {
 	sched.execute();
+/*  //can do some logic here
+  if(SensorArray[0].getValue() > 128)
+    SensorArray[7].setValue(1);
+  else
+    SensorArray[7].setValue(0);
+
+  */
 }
 
 //void addSensor(Sensor sensor);
@@ -75,6 +82,35 @@ String SenseData::getData(char* name)
   ret.remove(ret.length()-1);
   ret += "}";
   return ret;
+}
+
+
+int16_t SenseData::getValue(char* name)
+{
+  int ret = 0;
+  for(int i = 0;i<MAX_SENSOR_NB;i++)
+  {
+    if(SensorArray[i].m_name[0] != '\0')
+    {
+      if(strcmp(name,SensorArray[i].m_name) == 0 || strcmp("",name) == 0)
+      {
+        ret = SensorArray[i].getValue();
+      }
+    }
+  }
+  return ret;
+}
+
+void SenseData::setValue(char* name, int16_t value)
+{
+  Serial.print("setValue: ");Serial.print(name);Serial.print(" ");Serial.println(value);
+  for(int i = 0;i<MAX_SENSOR_NB;i++)
+  {
+    if(strcmp(name,SensorArray[i].m_name) == 0)
+    {
+      SensorArray[i].setValue(value);
+    }
+  }
 }
 
 String SenseData::getHistory(char* name,int qty,int long_history)
@@ -117,15 +153,5 @@ String SenseData::getHistory(char* name,int qty,int long_history)
   return ret;
 }
 
-void SenseData::setData(char* name, int value)
-{
-  Serial.print("setData: ");Serial.print(name);Serial.print(" ");Serial.println(value);
-  for(int i = 0;i<MAX_SENSOR_NB;i++)
-  {
-    if(strcmp(name,SensorArray[i].m_name) == 0)
-    {
-      SensorArray[i].setValue(value);
-    }
-  }
-}
+
   
