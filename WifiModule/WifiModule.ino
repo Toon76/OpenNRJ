@@ -77,7 +77,7 @@ void loop()
   //scheduler.execute();
   sense_data.run();
   WiFiClient client = server.available();  // try to get client
-  
+  client.setNoDelay(1);
   if(got_config)
   {
     got_config = false;
