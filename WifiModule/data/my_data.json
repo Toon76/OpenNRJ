@@ -9,8 +9,9 @@
 	"historypage":
 	{
 		"plots":[
-			["signal1","signal3"],
-			["signal2","signal4"]
+			{"name":"title1","data":["ADC0", "ADC1", "ADC2", "ADC3","temp","random","sinus"]},
+			{"name":"title2","data":["ADC0", "ADC1", "ADC2", "ADC3","temp","random","sinus"]},
+			{"name":"title3","data":["signal2","signal4"]}
 			]
 	},
 	"config":

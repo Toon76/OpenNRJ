@@ -34,7 +34,12 @@
   </body>
   <div class="page" id="chartp" style="display:none">
     <div class="w3-row w3-margin w3-border">
-      <div class="w3-third w3-border ct-chart" id="line"></div>
+      <div class="w3-third w3-border ct-chart" id="line0"></div>
+      <div class="w3-third w3-border ct-chart" id="line1"></div>
+      <div class="w3-third w3-border ct-chart" id="line2"></div>
+      <div class="w3-third w3-border ct-chart" id="line3"></div>
+      <div class="w3-third w3-border ct-chart" id="line4"></div>
+      <div class="w3-third w3-border ct-chart" id="line5"></div>
       <div class="w3-third w3-border ct-chart" id="bar"></div>
       <div class="w3-third w3-border ct-chart" id="pie"></div>
     </div>
@@ -120,7 +125,7 @@
 
   </body>
   <script>
-var linechart;
+var linecharts = [];
 var config_JSON;
 loadJSON();
 
@@ -165,34 +170,40 @@ function menuClick(elmnt) {
     case "butt-chart":
   	document.getElementById("chartp").style.display = "block";
 
-    var labels_array = ["ADC0", "ADC1", "ADC2", "ADC3","temp","random","sinus"]
-    var series_array = new Array(labels_array.length).fill().map(() => ([]));
+    piechart.update();
 
-    linechart = new Chartist.Line('#line', 
+    //load lines chart dynmaically from configuration
+    config_JSON.historypage.plots.forEach(function myFunction(value, index) {
+
+          console.log("chart "+ value.name+ " / data: " + value.data);
+          var series_array = new Array(value.data.length).fill().map(() => ([]));
+          linecharts[index] = new Chartist.Line('#line'+index, 
                         {
-                          labels: labels_array, series: series_array
+                          labels: value.data, series: series_array
                         }, 
                         {
                           height: 300,
                           plugins: [
                             Chartist.plugins.legend({
-                              legendNames: labels_array,
+                              legendNames: value.data,
                             })
                           ]
                         });
 
-    //console.log(linechart);
-  	piechart.update();
+          value.data.forEach(function myFunction(value, dataindex) {
+          if(value == "random")
+            linecharts[index].data.series[dataindex]=GetRandom(20);
+          else if(value == "sinus")
+            linecharts[index].data.series[dataindex]=GetSinus(20);
+          else
+            GetHistory(value,linecharts[index],dataindex);
+          });
+          linecharts[index].update();
+        });
 
-    linechart.data.series[5]=GetRandom(20);
-    linechart.data.series[6]=GetSinus(20);
-    GetHistory("ADC0",linechart.data.series[0]);
-    GetHistory("ADC1",linechart.data.series[1]);
-    GetHistory("ADC2",linechart.data.series[2]);
-    GetHistory("ADC3",linechart.data.series[3]);
-    GetHistory("temp",linechart.data.series[4]);
-    console.log(linechart);
-    linechart.update();
+
+
+
   	break;
 
     case "butt-conf":
@@ -258,14 +269,14 @@ function GetSinus(qty) {
   return SinusArray;
 }
 
-function GetHistory(name,array) {
+function GetHistory(name,chart,index) {
   console.log("GetHistory !");
   var xhttp = new XMLHttpRequest();
   xhttp.onreadystatechange = function() {
     if (this.readyState == 4 && this.status == 200) {
       var result = JSON.parse(this.responseText)[name];
-      Object.assign(array, result, { length: result.length }); //copy array content
-      linechart.update();
+      Object.assign(chart.data.series[index], result); //copy array content
+      chart.update();
     }
   };
   xhttp.open("GET", "/getHistory&name="+name, true);
