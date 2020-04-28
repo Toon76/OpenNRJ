@@ -25,7 +25,13 @@ typedef enum
   ESP8266_D5, //GPIO14
   ESP8266_D6, //GPIO12
   ESP8266_D7, //GPIO13
-  ESP8266_D8 //GPIO15 (warning: used at boot)
+  ESP8266_D8, //GPIO15 (warning: used at boot)
+
+  DS18B20_1,  //use GPIO14 (D5)
+  DS18B20_2,  //use GPIO14 (D5)
+  DS18B20_3,  //use GPIO14 (D5)
+  DS18B20_4  //use GPIO14 (D5)
+  
   //RX //GPIO3
   //TX //GPIO1
   //SPI CLK  //GPIO6

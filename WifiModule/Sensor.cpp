@@ -1,8 +1,14 @@
 #include "Arduino.h"
 #include "Sensor.h"
 
+#include <OneWire.h>
+#include <DallasTemperature.h>
+
 
 Adafruit_ADS1015 ads1015;
+
+OneWire oneWire(0);  //data wire connected to GPIO0 (D3)
+DallasTemperature sensors(&oneWire);
 
 /* must be synchro with SensorInput_t  enum */
 uint8_t arr_gpiodef[7] = {D0,D3,D4,D5,D6,D7,D8};
@@ -13,6 +19,13 @@ Sensor::Sensor(void)
   m_input = UNDEFINED_I;
   m_type = UNDEFINED_T;
   m_value = 0;
+}
+
+void printAddress(DeviceAddress deviceAddress) {
+  for (uint8_t i = 0; i < 8; i++){
+    if (deviceAddress[i] < 16) Serial.print("0");
+      Serial.print(deviceAddress[i], HEX);
+  }
 }
 
 void Sensor::init(char* name, SensorInput_t input, SensorType_t type)
@@ -44,6 +57,27 @@ void Sensor::init(char* name, SensorInput_t input, SensorType_t type)
       analogWrite(arr_gpiodef[m_input-ESP8266_D0], 0);
     }
   }
+  else if(m_input>=DS18B20_1 && m_input<=DS18B20_4)
+  {
+    Serial.println("init DS18B20");
+    DeviceAddress tempDeviceAddress; 
+    sensors.begin();
+    int numberOfDevices = sensors.getDeviceCount();
+    for(int i=0;i<numberOfDevices; i++){
+      // Search the wire for address
+      if(sensors.getAddress(tempDeviceAddress, i)){
+        Serial.print("Found device ");
+        Serial.print(i, DEC);
+        Serial.print(" (");
+        printAddress(tempDeviceAddress);
+        Serial.println(")");
+      } else {
+        Serial.print("Found ghost device at ");
+        Serial.print(i, DEC);
+        Serial.print(" but could not detect address. Check power and cabling");
+      }
+    }
+  }
 }
 
 
@@ -55,6 +89,7 @@ void Sensor::update(void)
 int16_t Sensor::readValue(void)
 {
   float value = 0;
+
   switch(m_input){
     case ESP8266_ADC:
       value = 0;//ads.readADC_SingleEnded(0);
@@ -75,6 +110,29 @@ int16_t Sensor::readValue(void)
       value = digitalRead(arr_gpiodef[m_input-ESP8266_D0]);
       //ou analogRead pour PWM ?
     break;
+    case DS18B20_1:
+    case DS18B20_2:
+    case DS18B20_3:
+    case DS18B20_4:
+
+      sensors.requestTemperatures(); // Send the command to get temperatures
+      //sensors.requestTemperaturesByIndex(m_input-DS18B20_1);
+      value = sensors.getTempCByIndex(m_input-DS18B20_1);
+      Serial.print("Temp C: ");
+      Serial.println(value);
+
+      /*sensors.requestTemperatures(); // Send the command to get temperatures
+      // Search the wire for address
+      DeviceAddress tempDeviceAddress; 
+      if(sensors.getAddress(tempDeviceAddress, m_input-DS18B20_1)){
+      // Print the data
+        value = sensors.getTempC(tempDeviceAddress);
+        Serial.print("Temp C: ");
+        Serial.println(value);
+      }*/
+
+    break;
+    
     //value = m_value if output
   }
 
@@ -104,8 +162,7 @@ int16_t Sensor::readValue(void)
       break;
       }
     case TEMP_DS18B20:
-    m_value = 0;
-   // https://nodemcu.readthedocs.io/en/master/modules/ds18b20/
+      m_value = (int16_t)((value+0.05)*10);
     break;
   }
   return m_value;

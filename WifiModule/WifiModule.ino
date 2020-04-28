@@ -15,7 +15,7 @@ const char* configfile = "/my_data.json";
 String payload; 
 // Allocate the JSON document and Deserialize the JSON document
 //DynamicJsonDocument jsondoc(2048);
-StaticJsonDocument<1024> jsondoc;
+StaticJsonDocument<2048> jsondoc;
 
 SenseData sense_data;
 //////////////////////////////
@@ -168,7 +168,7 @@ void loop()
         webFile = SPIFFS.open(path, "r");
         if (webFile) {
           client.println("HTTP/1.1 200 OK");
-          //client.print("Content-Type: ");client.println(dataType);
+          client.print("Content-Type: ");client.println(dataType);
           client.println("Connnection: close\r\n");
           client.write(webFile);
           webFile.close();

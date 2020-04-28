@@ -9,6 +9,7 @@
 	<link rel="icon" href="data:;base64,iVBORw0KGgo="> -->
     <link rel="stylesheet" href="font-awesome.min.css">
     <link rel="stylesheet" href="solid.min.css">
+    <link rel="icon" href="data:,">
     <script src="chartist.min.js"></script>
     <script src="chartist-plugin-legend.js"></script>
   </head>
@@ -174,8 +175,6 @@ function menuClick(elmnt) {
 
     //load lines chart dynmaically from configuration
     config_JSON.historypage.plots.forEach(function myFunction(value, index) {
-
-          console.log("chart "+ value.name+ " / data: " + value.data);
           var series_array = new Array(value.data.length).fill().map(() => ([]));
           linecharts[index] = new Chartist.Line('#line'+index, 
                         {
@@ -291,6 +290,7 @@ function set_switch(dest_id,name,value) {
 
   if(name){
     clone.querySelector('.sw_label').innerHTML = name;
+    clone.querySelector('.sw_chkbx').name = name;
   } 
   if(value) {
     clone.querySelector('.sw_chkbx').checked = true;

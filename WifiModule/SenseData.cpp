@@ -13,10 +13,10 @@ Sensor SensorArray[MAX_SENSOR_NB];
   
 void ProcessCallback() {
   //can do some logic here
-  if(SensorArray[0].getValue() > 128)
+  /*if(SensorArray[0].getValue() > 128)
     SensorArray[7].setValue(1);
   else
-    SensorArray[7].setValue(0);
+    SensorArray[7].setValue(0);*/
 }
 
 void SamplingCallback() {
@@ -42,13 +42,15 @@ SenseData::SenseData(void)
 void SenseData::init(void)
 {
   SensorArray[0].init("ADC0",ADS1015_ADC0,ANALOG_mV);
-  SensorArray[1].init("ADC1",ADS1015_ADC0,ANALOG_mV);
-  SensorArray[2].init("ADC2",ADS1015_ADC0,ANALOG_mV);
-  SensorArray[3].init("ADC3",ADS1015_ADC0,ANALOG_mV);
-  SensorArray[4].init("temp",ADS1015_ADC0,TEMP_NTC);
+  SensorArray[1].init("temp",ADS1015_ADC0,TEMP_NTC);
+  SensorArray[2].init("DS18_1",DS18B20_1,TEMP_DS18B20);
+  SensorArray[3].init("DS18_2",DS18B20_2,TEMP_DS18B20);
+  SensorArray[4].init("DS18_3",DS18B20_3,TEMP_DS18B20);
+  //SensorArray[4].init("ADC1",ADS1015_ADC1,ANALOG_mV);
   SensorArray[5].init("D0IN",ESP8266_D0,DIGITAL_IN);
   SensorArray[6].init("D3IN",ESP8266_D3,DIGITAL_IN);
-  SensorArray[7].init("D4OUT",ESP8266_D4,DIGITAL_OUT);
+  //SensorArray[7].init("D4OUT",ESP8266_D4,DIGITAL_OUT);
+  SensorArray[7].init("LED",ESP8266_D4,DIGITAL_OUT);
   SensorArray[8].init("D5PWM",ESP8266_D5,PWM);
   SensorArray[9].init("D6IN",ESP8266_D6,DIGITAL_IN);
 

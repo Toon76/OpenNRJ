@@ -1,15 +1,25 @@
   {
   	"homepage":
   	{
-	  	"bars":["value1","value2","test"],
-	  	"numeric":[],
-	  	"switches":[],
-		"pies":[]
+  		"modules":[
+	  		{
+	  		"name":"module1",
+		  	"bars":["value1","value2"],
+		  	"numeric":[],
+		  	"switches":[],
+			"pies":[]
+			},
+			{
+	  		"name":"module2",
+		  	"bars":["test"],
+		  	"switches":["light"]
+		  	}
+		]
 	},
 	"historypage":
 	{
 		"plots":[
-			{"name":"title1","data":["ADC0", "ADC1", "ADC2", "ADC3","temp","random","sinus"]},
+			{"name":"title1","data":["DS18_1", "DS18_2", "DS18_3"]},
 			{"name":"title2","data":["ADC0", "ADC1", "ADC2", "ADC3","temp","random","sinus"]},
 			{"name":"title3","data":["signal2","signal4"]}
 			]
